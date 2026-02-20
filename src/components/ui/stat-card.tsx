@@ -22,7 +22,7 @@ function StatCard({ label, value, trend, icon, className, index = 0 }: StatCardP
       initial={{ opacity: 0, y: 16 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.5, ease, delay: index * 0.08 }}
-      className={cn('rounded-2xl bg-[#111111] border border-white/[0.06] p-6 flex flex-col gap-3', className)}
+      className={cn('rounded-2xl bg-[#111111] border border-white/[0.06] p-4 sm:p-6 flex flex-col gap-3', className)}
     >
       <div className="flex items-center justify-between">
         <span className="text-sm text-white/50 font-medium">{label}</span>

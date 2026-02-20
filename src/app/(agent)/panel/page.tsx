@@ -64,7 +64,7 @@ export default function PanelPage() {
   const firstName = agent.name.split(' ')[0]
 
   return (
-    <div className="relative py-6 flex flex-col gap-8 overflow-x-hidden">
+    <div className="relative py-6 flex flex-col gap-8">
       {/* Ambient glow */}
       <GlowOrb
         color="#94A3B8"
@@ -93,7 +93,7 @@ export default function PanelPage() {
       </motion.div>
 
       {/* Stat cards 2x2 grid */}
-      <div className="grid grid-cols-2 gap-3">
+      <div className="grid grid-cols-2 gap-2.5">
         <StatCard
           label="Total Referidos"
           value={Math.round(realtimeTotal)}

@@ -21,7 +21,7 @@ export default function AgentLayout({ children }: { children: ReactNode }) {
 
         <AgentHeader />
 
-        <main className="relative z-10 mx-auto max-w-[480px] px-4 pt-14 pb-20">
+        <main className="relative z-10 mx-auto max-w-[480px] px-4 pt-14 pb-20 overflow-x-hidden">
           {children}
         </main>
 
