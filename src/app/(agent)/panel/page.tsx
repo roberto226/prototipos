@@ -64,7 +64,7 @@ export default function PanelPage() {
   const firstName = agent.name.split(' ')[0]
 
   return (
-    <div className="relative py-6 flex flex-col gap-8">
+    <div className="relative py-6 flex flex-col gap-8 overflow-x-hidden">
       {/* Ambient glow */}
       <GlowOrb
         color="#94A3B8"
