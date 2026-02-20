@@ -12,7 +12,6 @@ import {
   commissions,
   agents,
   prospects as allProspects,
-  transactions as allTransactions,
 } from '@/lib/mock-data'
 import { formatCurrency, formatDate } from '@/lib/formatters'
 import type { Commission } from '@/lib/types'
@@ -46,12 +45,6 @@ function agentName(agentId: string): string {
 function prospectName(prospectId: string): string {
   const p = allProspects.find((pr) => pr.id === prospectId)
   return p ? p.name.split(' ').slice(0, 2).join(' ') : prospectId
-}
-
-function transactionDesc(transactionId?: string): string {
-  if (!transactionId) return '--'
-  const t = allTransactions.find((tx) => tx.id === transactionId)
-  return t ? t.description : transactionId
 }
 
 /* ------------------------------------------------------------------ */
@@ -146,9 +139,9 @@ export default function CommissionsPage() {
     {
       key: 'transaction',
       label: 'Transacción',
-      render: (row) => (
-        <span className="text-white/50 text-xs max-w-[180px] truncate block">
-          {transactionDesc(row.transactionId)}
+      render: () => (
+        <span className="text-white/50 text-xs">
+          Fondeo – compra de mexas
         </span>
       ),
     },

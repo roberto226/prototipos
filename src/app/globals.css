@@ -47,6 +47,7 @@ html {
   touch-action: manipulation;
   -webkit-tap-highlight-color: transparent;
   -webkit-text-size-adjust: 100%;
+  -webkit-touch-callout: none;
   overscroll-behavior: none;
 }
 
@@ -57,14 +58,16 @@ body {
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   letter-spacing: -0.011em;
+  touch-action: manipulation;
   overscroll-behavior: none;
   -webkit-user-select: none;
   user-select: none;
 }
 
-input, textarea, [contenteditable] {
+input, textarea, select, [contenteditable] {
   -webkit-user-select: text;
   user-select: text;
+  font-size: 16px;
 }
 
 @property --gradient-angle {
