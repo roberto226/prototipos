@@ -467,11 +467,6 @@ export default function RegisterPage() {
                       ? errors.contact
                       : undefined
                   }
-                  hint={
-                    !errors.contact
-                      ? 'Ingresa al menos celular o email'
-                      : undefined
-                  }
                 />
               </ScrollFadeIn>
 

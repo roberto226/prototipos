@@ -7,15 +7,12 @@ import {
   Users,
   UserCheck,
   TrendingUp,
-  DollarSign,
   Wallet,
-  CreditCard,
   BadgeDollarSign,
   CircleCheckBig,
 } from 'lucide-react'
 import { StatCard } from '@/components/ui/stat-card'
 import { DataTable, type Column } from '@/components/ui/data-table'
-import { Input } from '@/components/ui/input'
 import { Select } from '@/components/ui/select'
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card'
 import { ProgressBar } from '@/components/ui/progress-bar'
@@ -72,15 +69,39 @@ function agentName(agentId: string): string {
 /*  Page                                                               */
 /* ------------------------------------------------------------------ */
 
+type Period = '7d' | '30d' | '3m' | '6m' | 'all'
+
+const PERIODS: { key: Period; label: string }[] = [
+  { key: '7d', label: '7 días' },
+  { key: '30d', label: '30 días' },
+  { key: '3m', label: '3 meses' },
+  { key: '6m', label: '6 meses' },
+  { key: 'all', label: 'Todo' },
+]
+
+function periodToDate(period: Period): string | undefined {
+  if (period === 'all') return undefined
+  const now = new Date('2026-02-20')
+  if (period === '7d') now.setDate(now.getDate() - 7)
+  else if (period === '30d') now.setDate(now.getDate() - 30)
+  else if (period === '3m') now.setMonth(now.getMonth() - 3)
+  else if (period === '6m') now.setMonth(now.getMonth() - 6)
+  return now.toISOString().split('T')[0]
+}
+
 export default function DashboardPage() {
   const router = useRouter()
 
-  const [filters, setFilters] = useState<DashboardFilters>({
-    dateFrom: undefined,
+  const [period, setPeriod] = useState<Period>('all')
+  const [clientType, setClientType] = useState<DashboardFilters['clientType']>('all')
+  const [program, setProgram] = useState<DashboardFilters['program']>('all')
+
+  const filters = useMemo<DashboardFilters>(() => ({
+    dateFrom: periodToDate(period),
     dateTo: undefined,
-    clientType: 'all',
-    program: 'all',
-  })
+    clientType,
+    program,
+  }), [period, clientType, program])
 
   const stats = useMemo(() => getGlobalStats(filters), [filters])
 
@@ -173,64 +194,56 @@ export default function DashboardPage() {
         </motion.div>
 
         {/* Filters */}
-        <motion.div variants={itemVariants}>
-          <Card padding="sm">
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-              <Input
-                label="Desde"
-                type="date"
-                inputSize="sm"
-                value={filters.dateFrom ?? ''}
-                onChange={(e) =>
-                  setFilters((f) => ({ ...f, dateFrom: e.target.value || undefined }))
-                }
-              />
-              <Input
-                label="Hasta"
-                type="date"
-                inputSize="sm"
-                value={filters.dateTo ?? ''}
-                onChange={(e) =>
-                  setFilters((f) => ({ ...f, dateTo: e.target.value || undefined }))
-                }
-              />
-              <Select
-                label="Tipo de cliente"
-                selectSize="sm"
-                value={filters.clientType ?? 'all'}
-                onChange={(e) =>
-                  setFilters((f) => ({
-                    ...f,
-                    clientType: e.target.value as DashboardFilters['clientType'],
-                  }))
-                }
+        <motion.div variants={itemVariants} className="space-y-3">
+          {/* Period pills */}
+          <div className="flex gap-1.5 overflow-x-auto scrollbar-none pb-0.5">
+            {PERIODS.map((p) => (
+              <button
+                key={p.key}
+                onClick={() => setPeriod(p.key)}
+                className={`relative shrink-0 px-3.5 py-1.5 rounded-full text-xs font-medium transition-all duration-200 ${
+                  period === p.key
+                    ? 'text-white bg-white/[0.08] border border-white/[0.08]'
+                    : 'text-white/30 hover:text-white/50'
+                }`}
               >
-                <option value="all" className="bg-[#111111]">Todos</option>
-                <option value="vip" className="bg-[#111111]">VIP</option>
-                <option value="standard" className="bg-[#111111]">Standard</option>
-              </Select>
-              <Select
-                label="Programa"
-                selectSize="sm"
-                value={filters.program ?? 'all'}
-                onChange={(e) =>
-                  setFilters((f) => ({
-                    ...f,
-                    program: e.target.value as DashboardFilters['program'],
-                  }))
-                }
-              >
-                <option value="all" className="bg-[#111111]">Todos</option>
-                <option value="empresa_eb1" className="bg-[#111111]">Empresa EB 1</option>
-                <option value="empresa_eb2" className="bg-[#111111]">Empresa EB 2</option>
-              </Select>
-            </div>
-          </Card>
+                {p.label}
+              </button>
+            ))}
+          </div>
+
+          {/* Type + Program selects */}
+          <div className="grid grid-cols-2 gap-3">
+            <Select
+              label="Tipo de cliente"
+              selectSize="sm"
+              value={clientType ?? 'all'}
+              onChange={(e) =>
+                setClientType(e.target.value as DashboardFilters['clientType'])
+              }
+            >
+              <option value="all" className="bg-[#111111]">Todos</option>
+              <option value="vip" className="bg-[#111111]">VIP</option>
+              <option value="standard" className="bg-[#111111]">Standard</option>
+            </Select>
+            <Select
+              label="Programa"
+              selectSize="sm"
+              value={program ?? 'all'}
+              onChange={(e) =>
+                setProgram(e.target.value as DashboardFilters['program'])
+              }
+            >
+              <option value="all" className="bg-[#111111]">Todos</option>
+              <option value="empresa_eb1" className="bg-[#111111]">Empresa EB 1</option>
+              <option value="empresa_eb2" className="bg-[#111111]">Empresa EB 2</option>
+            </Select>
+          </div>
         </motion.div>
 
         {/* KPI Grid */}
         <motion.div variants={itemVariants}>
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
             <StatCard
               label="Total Referenciaciones"
               value={stats.totalReferrals}
@@ -250,34 +263,22 @@ export default function DashboardPage() {
               index={2}
             />
             <StatCard
-              label="Volumen Total"
-              value={formatCurrency(stats.totalTransactionVolume)}
-              icon={<DollarSign />}
-              index={3}
-            />
-            <StatCard
               label="Total Fondeo"
               value={formatCurrency(stats.totalFunding)}
               icon={<Wallet />}
-              index={4}
-            />
-            <StatCard
-              label="Compras con Tarjeta"
-              value={formatCurrency(stats.totalPurchases)}
-              icon={<CreditCard />}
-              index={5}
+              index={3}
             />
             <StatCard
               label="Comisión Generada"
               value={formatCurrency(stats.commissionGenerated)}
               icon={<BadgeDollarSign />}
-              index={6}
+              index={4}
             />
             <StatCard
               label="Comisión Pagada"
               value={formatCurrency(stats.commissionPaid)}
               icon={<CircleCheckBig />}
-              index={7}
+              index={5}
             />
           </div>
         </motion.div>

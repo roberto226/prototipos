@@ -139,16 +139,36 @@ export default function NewAgentPage() {
             <p className="text-xs text-white/40 mb-4">
               Selecciona para qué empresas puede referenciar este agente
             </p>
-            <div className="space-y-4">
+            <div className="flex flex-col gap-2">
               {(Object.entries(PROGRAM_LABELS) as [OlimpoProgram, string][]).map(
-                ([key, label]) => (
-                  <Toggle
-                    key={key}
-                    checked={allowedPrograms[key]}
-                    onChange={() => toggleProgram(key)}
-                    label={label}
-                  />
-                ),
+                ([key, label]) => {
+                  const isChecked = allowedPrograms[key]
+                  return (
+                    <button
+                      key={key}
+                      type="button"
+                      onClick={() => toggleProgram(key)}
+                      className={`flex items-center gap-3 w-full rounded-xl px-4 py-3 text-left transition-all duration-200 border ${
+                        isChecked
+                          ? 'bg-white/[0.04] border-emerald-500/25'
+                          : 'bg-transparent border-white/[0.06] hover:border-white/[0.1]'
+                      }`}
+                    >
+                      <span
+                        className={`flex items-center justify-center h-5 w-5 rounded-md shrink-0 transition-all duration-200 ${
+                          isChecked
+                            ? 'bg-emerald-500 border-emerald-500'
+                            : 'border-2 border-white/20'
+                        }`}
+                      >
+                        {isChecked && <Check className="h-3 w-3 text-white" />}
+                      </span>
+                      <span className={`text-sm font-medium transition-colors ${isChecked ? 'text-white' : 'text-white/50'}`}>
+                        {label}
+                      </span>
+                    </button>
+                  )
+                },
               )}
             </div>
           </CardContent>

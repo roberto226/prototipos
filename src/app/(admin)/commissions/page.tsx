@@ -6,9 +6,7 @@ import { BadgeDollarSign, CircleCheckBig, Clock } from 'lucide-react'
 import { StatCard } from '@/components/ui/stat-card'
 import { DataTable, type Column } from '@/components/ui/data-table'
 import { Select } from '@/components/ui/select'
-import { Input } from '@/components/ui/input'
 import { Badge } from '@/components/ui/badge'
-import { Card } from '@/components/ui/card'
 import ScrollFadeIn from '@/components/shared/ScrollFadeIn'
 import {
   commissions,
@@ -57,14 +55,37 @@ function transactionDesc(transactionId?: string): string {
 }
 
 /* ------------------------------------------------------------------ */
+/*  Period helpers                                                     */
+/* ------------------------------------------------------------------ */
+
+type Period = '7d' | '30d' | '3m' | '6m' | 'all'
+
+const PERIODS: { key: Period; label: string }[] = [
+  { key: '7d', label: '7 días' },
+  { key: '30d', label: '30 días' },
+  { key: '3m', label: '3 meses' },
+  { key: '6m', label: '6 meses' },
+  { key: 'all', label: 'Todo' },
+]
+
+function periodToDate(period: Period): Date | undefined {
+  if (period === 'all') return undefined
+  const now = new Date('2026-02-20')
+  if (period === '7d') now.setDate(now.getDate() - 7)
+  else if (period === '30d') now.setDate(now.getDate() - 30)
+  else if (period === '3m') now.setMonth(now.getMonth() - 3)
+  else if (period === '6m') now.setMonth(now.getMonth() - 6)
+  return now
+}
+
+/* ------------------------------------------------------------------ */
 /*  Page                                                               */
 /* ------------------------------------------------------------------ */
 
 export default function CommissionsPage() {
   const [statusFilter, setStatusFilter] = useState<string>('all')
   const [agentFilter, setAgentFilter] = useState<string>('all')
-  const [dateFrom, setDateFrom] = useState('')
-  const [dateTo, setDateTo] = useState('')
+  const [period, setPeriod] = useState<Period>('all')
 
   /* Summary stats */
   const totalGenerated = useMemo(
@@ -96,19 +117,15 @@ export default function CommissionsPage() {
     if (agentFilter !== 'all') {
       result = result.filter((c) => c.agentId === agentFilter)
     }
-    if (dateFrom) {
-      const from = new Date(dateFrom)
-      result = result.filter((c) => new Date(c.createdAt) >= from)
-    }
-    if (dateTo) {
-      const to = new Date(dateTo)
-      result = result.filter((c) => new Date(c.createdAt) <= to)
+    const fromDate = periodToDate(period)
+    if (fromDate) {
+      result = result.filter((c) => new Date(c.createdAt) >= fromDate)
     }
 
     return result.sort(
       (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime(),
     )
-  }, [statusFilter, agentFilter, dateFrom, dateTo])
+  }, [statusFilter, agentFilter, period])
 
   /* Table columns */
   const columns: Column<Commission>[] = [
@@ -219,52 +236,50 @@ export default function CommissionsPage() {
       </motion.div>
 
       {/* Filters */}
-      <motion.div variants={itemVariants}>
-        <Card padding="sm">
-          <div className="flex flex-wrap items-end gap-4">
-            <Select
-              label="Estado"
-              selectSize="sm"
-              value={statusFilter}
-              onChange={(e) => setStatusFilter(e.target.value)}
-              className="w-[140px]"
+      <motion.div variants={itemVariants} className="space-y-3">
+        {/* Period pills */}
+        <div className="flex gap-1.5 overflow-x-auto scrollbar-none pb-0.5">
+          {PERIODS.map((p) => (
+            <button
+              key={p.key}
+              onClick={() => setPeriod(p.key)}
+              className={`relative shrink-0 px-3.5 py-1.5 rounded-full text-xs font-medium transition-all duration-200 ${
+                period === p.key
+                  ? 'text-white bg-white/[0.08] border border-white/[0.08]'
+                  : 'text-white/30 hover:text-white/50'
+              }`}
             >
-              <option value="all" className="bg-[#111111]">Todos</option>
-              <option value="pending" className="bg-[#111111]">Pendiente</option>
-              <option value="paid" className="bg-[#111111]">Pagada</option>
-            </Select>
-            <Select
-              label="Agente"
-              selectSize="sm"
-              value={agentFilter}
-              onChange={(e) => setAgentFilter(e.target.value)}
-              className="w-[200px]"
-            >
-              <option value="all" className="bg-[#111111]">Todos</option>
-              {agents.map((a) => (
-                <option key={a.id} value={a.id} className="bg-[#111111]">
-                  {a.name.split(' ').slice(0, 2).join(' ')}
-                </option>
-              ))}
-            </Select>
-            <Input
-              label="Desde"
-              type="date"
-              inputSize="sm"
-              value={dateFrom}
-              onChange={(e) => setDateFrom(e.target.value)}
-              className="w-[155px]"
-            />
-            <Input
-              label="Hasta"
-              type="date"
-              inputSize="sm"
-              value={dateTo}
-              onChange={(e) => setDateTo(e.target.value)}
-              className="w-[155px]"
-            />
-          </div>
-        </Card>
+              {p.label}
+            </button>
+          ))}
+        </div>
+
+        {/* Status + Agent selects */}
+        <div className="grid grid-cols-2 gap-3">
+          <Select
+            label="Estado"
+            selectSize="sm"
+            value={statusFilter}
+            onChange={(e) => setStatusFilter(e.target.value)}
+          >
+            <option value="all" className="bg-[#111111]">Todos</option>
+            <option value="pending" className="bg-[#111111]">Pendiente</option>
+            <option value="paid" className="bg-[#111111]">Pagada</option>
+          </Select>
+          <Select
+            label="Agente"
+            selectSize="sm"
+            value={agentFilter}
+            onChange={(e) => setAgentFilter(e.target.value)}
+          >
+            <option value="all" className="bg-[#111111]">Todos</option>
+            {agents.map((a) => (
+              <option key={a.id} value={a.id} className="bg-[#111111]">
+                {a.name.split(' ').slice(0, 2).join(' ')}
+              </option>
+            ))}
+          </Select>
+        </div>
       </motion.div>
 
       {/* Table */}

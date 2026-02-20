@@ -882,11 +882,11 @@ function deriveCommissions(): Commission[] {
   const result: Commission[] = []
   let idx = 1
 
-  for (const txn of transactions) {
-    const rate = txn.type === 'funding'
-      ? (txn.amount >= 70000 ? 0.01 : 0.015)
-      : (txn.amount >= 10000 ? 0.025 : 0.03)
+  // Commissions are only generated from funding (wallet top-up) transactions
+  const fundingTxns = transactions.filter((t) => t.type === 'funding')
 
+  for (const txn of fundingTxns) {
+    const rate = txn.amount >= 70000 ? 0.01 : 0.015
     const amount = Math.round(txn.amount * rate * 100) / 100
     const txnDate = new Date(txn.createdAt)
 
@@ -1218,4 +1218,59 @@ export function getGlobalStats(filters?: DashboardFilters) {
     conversionRate,
     avgFundingPerProspect,
   }
+}
+
+// ---------------------------------------------------------------------------
+// Monthly Metrics (for agent chart)
+// ---------------------------------------------------------------------------
+
+export interface MonthlyMetric {
+  label: string
+  commissions: number
+  referrals: number
+  activations: number
+  funding: number
+}
+
+export function getAgentMonthlyMetrics(agentId: string): MonthlyMetric[] {
+  const agentProspects = getProspectsByAgent(agentId)
+  const agentTxns = getTransactionsByAgent(agentId)
+  const agentComms = getCommissionsByAgent(agentId)
+
+  const periods = [
+    { year: 2025, month: 9, label: 'Oct' },
+    { year: 2025, month: 10, label: 'Nov' },
+    { year: 2025, month: 11, label: 'Dic' },
+    { year: 2026, month: 0, label: 'Ene' },
+    { year: 2026, month: 1, label: 'Feb' },
+  ]
+
+  return periods.map(({ year, month, label }) => {
+    const start = new Date(year, month, 1)
+    const end = new Date(year, month + 1, 0, 23, 59, 59, 999)
+    const inRange = (d: string) => {
+      const dt = new Date(d)
+      return dt >= start && dt <= end
+    }
+
+    const monthComms = agentComms.filter((c) => inRange(c.createdAt))
+    const monthProspects = agentProspects.filter((p) => inRange(p.createdAt))
+    const monthActivations = agentProspects.filter((p) => {
+      const entry = p.statusHistory.find((h) => h.status === 'active')
+      return entry ? inRange(entry.timestamp) : false
+    })
+    const monthFunding = agentTxns.filter(
+      (t) => t.type === 'funding' && inRange(t.createdAt),
+    )
+
+    return {
+      label,
+      commissions: Math.round(
+        monthComms.reduce((s, c) => s + c.amount, 0),
+      ),
+      referrals: monthProspects.length,
+      activations: monthActivations.length,
+      funding: monthFunding.reduce((s, t) => s + t.amount, 0),
+    }
+  })
 }
